@@ -94,4 +94,26 @@ class DuplexPolicyEnforcer : public PolicyClass
 	static_assert(std::is_base_of<Policy<PolicyClass>, PolicyClass>::value, "Policy class must derive from Policy.");
 };
 
+/**
+ * TODO consider having magic macros for dummies
+ * TODO find a way to avoid X macro. consider adding a class that would derive from
+ */
+
+#define REQUIRE_FUNC(retval, funcname, args...) \
+		retval (_PolicyClass::*)(args) = &_POLICY_NAME::funcname
+
+#define REQUIRE_CONST_FUNC(retval, funcname, args...) \
+		retval (_PolicyClass::*)(args) const = &_POLICY_NAME::funcname
+
+#define POLICY_DECL(args...) \
+		template <typename _PolicyClass> class _POLICY_NAME : STATIC_DERIVE<_PolicyClass> \
+		{ \
+			protected: \
+			static constexpr bool Enforce(args) \
+			{ \
+				return true; \
+			} \
+		}
+
+
 #endif /* ENFORCEPOLICY_H_ */

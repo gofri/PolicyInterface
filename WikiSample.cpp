@@ -71,25 +71,8 @@ protected:
 	POutputPolicy(print_ps<T> = &_PolicyClass::print) {}
 */
 
-	/**
-	 * TODO find a way to implement black listing
-	 * 		based on:
-	 * 		template<func> (accept all)
-	 * 		template<specialized>: assert_false-like behavior to forbid
-	 */
-
-	/**
-	 * TODO add a "force-inheritance" constant/base-class & add support in Enforcer - to force inheritence of policy
-	 * TODO can use the force-inhertance to force noexcept - assuming you cant derive and override noexcept - POC
-	 * TODO prepare a table comparing enforced policies vs regular polymorphism
-	 */
-
 		/**********************
 		 * REQUIRED TEMPLATE SPECIFICATIONS LIST:
-		 * TODO make util functions (with multiple args...)
-		 * TODO figure a way to make a ::value indication rather than compile error - the feature is required for "either" whitelist
-		 */
-/*
 		// Each and every one of the following specifications are required
 		static_assert(std::is_same<decltype(std::declval<_PolicyClass>().print(std::declval<std::string>())), void >::value, "valid sig");
 		static_assert(std::is_same<decltype(std::declval<_PolicyClass>().print(std::declval<char>())), void >::value, "valid sig");
@@ -233,9 +216,12 @@ public:
 	    							std::string (_PolicyClass::*)() const = &PLanguagePolicy::message) { return true; }
 };
 
+#define _POLICY_NAME PLanguagePolicy2
+	POLICY_DECL(REQUIRE_CONST_FUNC(std::string, message));
+#undef _POLICY_NAME
 
 template <typename OutputPolicy, typename LanguagePolicy>
-struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy, LanguagePolicy> >
+struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy2, LanguagePolicy> >
 {
 	HelloWorld_SafeWrapped() = default;
 
