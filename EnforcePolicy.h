@@ -96,18 +96,21 @@ class DuplexPolicyEnforcer : public PolicyClass
 
 /**
  * TODO consider having magic macros for dummies
- * TODO find a way to avoid X macro. consider adding a class that would derive from
+ * TODO POC enfore that function is constexpr
+ * TODO Change convention to using sublcass like unprotect to allow derivition from Policy
  */
 
 #define REQUIRE_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) = &_POLICY_NAME::funcname
+		retval (_PolicyClass::*)(args) = &POLICY_TEMP_NAME::funcname	\
+
 
 #define REQUIRE_CONST_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) const = &_POLICY_NAME::funcname
+		retval (_PolicyClass::*)(args) const = &POLICY_TEMP_NAME::funcname
 
-#define POLICY_DECL(args...) \
+#define POLICY_DECL(_POLICY_NAME, args...) \
 		template <typename _PolicyClass> class _POLICY_NAME : STATIC_DERIVE<_PolicyClass> \
 		{ \
+			using POLICY_TEMP_NAME = _POLICY_NAME; \
 			protected: \
 			static constexpr bool Enforce(args) \
 			{ \

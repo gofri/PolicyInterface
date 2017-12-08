@@ -216,9 +216,9 @@ public:
 	    							std::string (_PolicyClass::*)() const = &PLanguagePolicy::message) { return true; }
 };
 
-#define _POLICY_NAME PLanguagePolicy2
-	POLICY_DECL(REQUIRE_CONST_FUNC(std::string, message));
-#undef _POLICY_NAME
+POLICY_DECL(PLanguagePolicy2,
+			REQUIRE_CONST_FUNC(std::string, message)
+			);
 
 template <typename OutputPolicy, typename LanguagePolicy>
 struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy2, LanguagePolicy> >
