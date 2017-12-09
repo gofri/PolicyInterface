@@ -114,42 +114,64 @@ struct RefProtected final : protected _Object
 	friend _Accessor;
 };
 
-
 /**
  * TODO POC enfore that function is constexpr
  * TODO add support for FORCE-INHERITANCE for policies
  */
 
 /**
- ***************** MACROS API
- ***************** TODO Fix names: static, member, const,
+ ***************** Templat Simple API
  */
 
-#define REQUIRE_FUNC(retval, funcname, args...) \
-		REQUIRE_MEMBER_FUNC_TMP(, retval, funcname, args)
+template <typename _Type>
+struct RetVal
+{
+	constexpr RetVal() = default;
+};
 
-#define REQUIRE_CONST_FUNC(retval, funcname, args...) \
-		REQUIRE_MEMBER_FUNC_TMP(const, retval, funcname, args)
+template <typename... ARGS>
+struct Args
+{
+	constexpr Args() = default;
+};
 
-#define REQUIRE_MEMBER_FUNC_TMP(constness, retval, funcname, args...) \
-		REQUIRE_ANY_FUNC_TMP(constness, _PolicyClass::, retval, funcname, args)
 
-#define REQUIRE_STATIC_FUNC(retval, funcname, args...) \
-		REQUIRE_ANY_FUNC_TMP(,, retval, funcname, args)
+struct Constness {};
+static constexpr Constness _CONST = {};
+static constexpr Constness _NON_CONST = {};
 
-#define REQUIRE_ANY_FUNC_TMP(constness, cls, retval, funcname, args...) \
-		retval (cls*)(args) constness = &RefProtected<_PolicyClass, POLICY_TEMP_NAME>::funcname
+struct Check
+{
+	struct ASSERTION_IS_TRUE {};
 
-#define POLICY_DECL(_POLICY_NAME, args...) \
-		template <typename _PolicyClass> class _POLICY_NAME \
-		{ \
-			protected: \
-			using POLICY_TEMP_NAME = _POLICY_NAME; \
-			static constexpr bool Enforce(args) \
-			{ \
-				return true; \
-			} \
-		}
+	template <typename _RetType, typename... _ARGS>
+	static constexpr ASSERTION_IS_TRUE StaticFunc(RetVal<_RetType>, Args<_ARGS...>, _RetType (*fp)(_ARGS...))
+	{
+		return ASSERTION_IS_TRUE();
+	}
 
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE MemberFunc(RetVal<_RetType>, _RetType (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(RetVal<_RetType>, _RetType const (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE API2Constable_MemberFunc(RetVal<_RetType>,
+																_RetType (_PolicyClass::*funcPtr)(_ARGS...),
+																Args<_ARGS...>,
+																Constness = _NON_CONST
+	)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+};
 
 #endif /* ENFORCEPOLICY_H_ */
