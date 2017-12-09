@@ -30,12 +30,11 @@ public:
     }
 };
 
-
-
 // *** EDITED: not from original source code. ***
 template <class _PolicyClass>
-class POutputPolicy : STATIC_DERIVE_PUBLIC<_PolicyClass>
+class POutputPolicy
 {
+
 protected:
 
 	/* Note:	Assuming you are willing to define an explicit interface,
@@ -87,18 +86,15 @@ protected:
 	struct WeakPolicy_t { };
 	static constexpr const WeakPolicy_t WeakPolicy = {};
 
-	// Function description...
 	typedef void (_PolicyClass::*print_p1)(std::string const &) const;
 
+	using Access = AccessProtected<_PolicyClass, POutputPolicy>;
+
     // different implementation options, chose yours...
-    static constexpr bool Enforce(print_p1 = &POutputPolicy::print) {return true;}
-
-	/* TODO Add Weak Enforcement support to PolicyEnforcer */
-	constexpr POutputPolicy(const WeakPolicy_t& WeakPolicy)
-	{
-		static_assert(std::is_member_function_pointer<decltype(&_PolicyClass::print)>::value, "Assert name");
-	}
-
+    static constexpr bool Enforce(print_p1 = &ObtainAccess<_PolicyClass>::A::print)
+    {
+    	return true;
+    }
 };
 
 class OutputPolicyWriteToCout
@@ -215,10 +211,10 @@ public:
 	    static constexpr bool Enforce(message_p = &PLanguagePolicy::message,
 	    							std::string (_PolicyClass::*)() const = &PLanguagePolicy::message) { return true; }
 };
-
 POLICY_DECL(PLanguagePolicy2,
 			REQUIRE_CONST_FUNC(std::string, message)
 			);
+
 
 template <typename OutputPolicy, typename LanguagePolicy>
 struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy2, LanguagePolicy> >
@@ -273,7 +269,7 @@ struct WA
 {
 	static void print()
 	{
-		std::cout << std::is_same<decltype(&GetAccess<Secret, WA>::func), void (Secret::*)()>::value << std::endl;
+		std::cout << std::is_same<decltype(&AccessProtected<Secret, WA>::func), void (Secret::*)()>::value << std::endl;
 	}
 };
 

@@ -19,6 +19,7 @@ struct CallAssert
 };
 
 // TODO move to library, generally useful and required for safe unprotect
+// TODO change to STATIC_DERIVE(ACCESS, T) with 3 predefined structs
 template<typename T>
 struct STATIC_DERIVE_PUBLIC : public T
 {
@@ -102,7 +103,7 @@ class PolicyEnforcer : public PolicyClass
 };
 
 template <class _Object, class _Accessor>
-struct GetAccess : protected _Object
+struct AccessProtected : protected _Object
 {
 	friend _Accessor;
 };
@@ -120,19 +121,29 @@ class DuplexPolicyEnforcer : public PolicyClass
  * TODO consider having magic macros for dummies
  * TODO POC enfore that function is constexpr
  * TODO Change convention to using sublcass like unprotect to allow derivition from Policy
+ * TODO add support for FORCE-INHERITANCE for policies
  */
 
 #define REQUIRE_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) = &GetAccess<_PolicyClass, POLICY_TEMP_NAME>::funcname	\
+		REQUIRE_MEMBER_FUNC_TMP(, retval, funcname, args)
 
 #define REQUIRE_CONST_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) const = &GetAccess<_PolicyClass, POLICY_TEMP_NAME>::funcname
+		retval (_PolicyClass::*)(args) const = &AccessProtected<_PolicyClass, POLICY_TEMP_NAME>::funcname
+
+#define REQUIRE_STATIC_FUNC(retval, funcname, args...) \
+		REQUIRE_ANY_FUNC_TMP(,, retval, funcname, args)
+
+#define REQUIRE_MEMBER_FUNC_TMP(constness, retval, funcname, args...) \
+		REQUIRE_ANY_FUNC_TMP(constness, _PolicyClass::, retval, funcname, args)
+
+#define REQUIRE_ANY_FUNC_TMP(constness, cls, retval, funcname, args...) \
+		retval (cls*)(args) constness = &AccessProtected<_PolicyClass, POLICY_TEMP_NAME>::funcname
 
 #define POLICY_DECL(_POLICY_NAME, args...) \
 		template <typename _PolicyClass> class _POLICY_NAME \
 		{ \
-			using POLICY_TEMP_NAME = _POLICY_NAME; \
 			protected: \
+			using POLICY_TEMP_NAME = _POLICY_NAME; \
 			static constexpr bool Enforce(args) \
 			{ \
 				return true; \
