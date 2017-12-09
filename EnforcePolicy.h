@@ -122,6 +122,7 @@ struct RefProtected final : protected _Object
 
 /**
  ***************** MACROS API
+ ***************** TODO Fix names: static, member, const,
  */
 
 #define REQUIRE_FUNC(retval, funcname, args...) \

@@ -40,7 +40,6 @@ protected:
 	// TODO explain: no support for the nothrow guarantee by standard definition
 	// TODO explain: White/Black-listing limitations due to language support - known issue
 	// TODO explain: Template functions limitations due to language support
-	// TODO add example for is_member_function on function name
 
 	typedef void (_PolicyClass::*print_p1)(std::string const &) const;
 
@@ -136,6 +135,92 @@ void functionThatExpects(const HelloWorld<A...>& h)
 }
 // *** END OF EDIT. ***
 
+class X {
+  static constexpr int value = 5;
+};
+
+template <typename RET1, typename... ARG1>
+static constexpr bool Func(RET1 (*f1)(ARG1...)) {
+    return true;
+}
+
+int func(int)
+{
+
+}
+
+int func(char)
+{
+
+}
+
+
+template <typename _Type>
+struct RetVal
+{
+	constexpr RetVal() = default;
+};
+
+template <typename _Type>
+struct FuncPtr
+{
+	constexpr FuncPtr(_Type) {};
+
+};
+
+template <typename T>
+FuncPtr<T> MakeFuncPtr(T d)
+{
+	return FuncPtr<T>(d);
+};
+
+template<typename... Args> struct pack {};
+
+template <typename... ARGS>
+struct Args
+{
+	constexpr Args() = default;
+};
+
+
+struct Constness {};
+static constexpr Constness _CONST = {};
+static constexpr Constness _NON_CONST = {};
+
+struct Check
+{
+	struct ASSERTION_IS_TRUE {};
+
+	template <typename _RetType, typename... _ARGS>
+	static constexpr ASSERTION_IS_TRUE StaticFunc(RetVal<_RetType>, Args<_ARGS...>, _RetType (*fp)(_ARGS...))
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE MemberFunc(RetVal<_RetType>, _RetType (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(RetVal<_RetType>, _RetType const (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE API2Constable_MemberFunc(RetVal<_RetType>,
+																_RetType (_PolicyClass::*funcPtr)(_ARGS...),
+																Args<_ARGS...>,
+																Constness = _NON_CONST
+	)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+};
+
 /**
  * EDITED: 	Each paragraph in the following code section contains:
  * 			both original and wrapped version of HelloWorld Host class.
@@ -163,9 +248,7 @@ int main()
 
     std::cout << std::boolalpha;
     std::cout << std::endl;
-
-    WA wa;
-    wa.print();
+    std::cout << Func(static_cast<int (*)(int)>(func)) << std::endl;
 }
 
 
