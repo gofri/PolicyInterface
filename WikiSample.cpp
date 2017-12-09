@@ -34,7 +34,7 @@ public:
 
 // *** EDITED: not from original source code. ***
 template <class _PolicyClass>
-class POutputPolicy : STATIC_DERIVE<_PolicyClass>
+class POutputPolicy : STATIC_DERIVE_PUBLIC<_PolicyClass>
 {
 protected:
 
@@ -205,7 +205,7 @@ struct A : Pol<A>
 };
 
 template <class _PolicyClass>
-class PLanguagePolicy : STATIC_DERIVE<_PolicyClass>
+class PLanguagePolicy : STATIC_DERIVE_PUBLIC<_PolicyClass>
 {
 public:
 		// Function description...
@@ -260,6 +260,23 @@ void functionThatExpects(const HelloWorld<A...>& h)
 struct t_POLICIES_FROM_HERE {};
 static constexpr struct t_POLICIES_FROM_HERE POLICIES_FROM_HERE = {};
 
+struct Secret
+{
+protected:
+	void func()
+	{
+
+	}
+};
+
+struct WA
+{
+	static void print()
+	{
+		std::cout << std::is_same<decltype(&GetAccess<Secret, WA>::func), void (Secret::*)()>::value << std::endl;
+	}
+};
+
 int main()
 {
     /* Example 1 */
@@ -282,6 +299,12 @@ int main()
     functionThatExpects(hello_world2_SafeWrapped); // prints "Hallo Welt!"
 
     A wish4thebest;
+
+    std::cout << std::boolalpha;
+    std::cout << std::endl;
+
+    WA wa;
+    wa.print();
 }
 
 

@@ -20,11 +20,27 @@ struct CallAssert
 
 // TODO move to library, generally useful and required for safe unprotect
 template<typename T>
-struct STATIC_DERIVE : public T
+struct STATIC_DERIVE_PUBLIC : public T
 {
 	// Derive without the ability to create an instance - simply get access to protected functions
-	STATIC_DERIVE() = delete;
+	STATIC_DERIVE_PUBLIC() = delete;
 };
+
+template<typename T>
+struct STATIC_DERIVE_PROTECTED : protected T
+{
+	// Derive without the ability to create an instance - simply get access to protected functions
+	STATIC_DERIVE_PROTECTED() = delete;
+};
+
+
+template<typename T>
+struct STATIC_DERIVE_PRIVATE : private T
+{
+	// Derive without the ability to create an instance - simply get access to protected functions
+	STATIC_DERIVE_PRIVATE() = delete;
+};
+
 
 // TODO	Find a way to ease policy syntax with inheritance from library template class.
 //		the following magic tricks might be handy.
@@ -65,7 +81,7 @@ class PolicyEnforcer : public PolicyClass
 	struct CheckPolicy
 	{
 		// Static-derive from policy to reach its protected members
-		struct Checker : STATIC_DERIVE< Policy<PolicyClass> >
+		struct Checker : STATIC_DERIVE_PUBLIC< Policy<PolicyClass> >
 		{
 			static constexpr bool Check()
 			{
@@ -85,6 +101,12 @@ class PolicyEnforcer : public PolicyClass
 	CheckPolicy< Policy<PolicyClass> > a;
 };
 
+template <class _Object, class _Accessor>
+struct GetAccess : protected _Object
+{
+	friend _Accessor;
+};
+
 /**
  * Policy duplex enforcer: Like normal enforcer, but also enforces that the policy class derives from the given policy.
  */
@@ -101,14 +123,13 @@ class DuplexPolicyEnforcer : public PolicyClass
  */
 
 #define REQUIRE_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) = &POLICY_TEMP_NAME::funcname	\
-
+		retval (_PolicyClass::*)(args) = &GetAccess<_PolicyClass, POLICY_TEMP_NAME>::funcname	\
 
 #define REQUIRE_CONST_FUNC(retval, funcname, args...) \
-		retval (_PolicyClass::*)(args) const = &POLICY_TEMP_NAME::funcname
+		retval (_PolicyClass::*)(args) const = &GetAccess<_PolicyClass, POLICY_TEMP_NAME>::funcname
 
 #define POLICY_DECL(_POLICY_NAME, args...) \
-		template <typename _PolicyClass> class _POLICY_NAME : STATIC_DERIVE<_PolicyClass> \
+		template <typename _PolicyClass> class _POLICY_NAME \
 		{ \
 			using POLICY_TEMP_NAME = _POLICY_NAME; \
 			protected: \
