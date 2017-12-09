@@ -135,10 +135,8 @@ struct Args
 	constexpr Args() = default;
 };
 
-
-struct Constness {};
-static constexpr Constness _CONST = {};
-static constexpr Constness _NON_CONST = {};
+struct T_CONST {};
+struct T_NON_CONST {};
 
 struct Check
 {
@@ -151,27 +149,45 @@ struct Check
 	}
 
 	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
-	static constexpr ASSERTION_IS_TRUE MemberFunc(RetVal<_RetType>, _RetType (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	static constexpr ASSERTION_IS_TRUE NonConstMemberFunc(RetVal<_RetType>, _RetType (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
 	{
 		return ASSERTION_IS_TRUE();
 	}
 
 	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
-	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(RetVal<_RetType>, _RetType const (_PolicyClass::*funcPtr)(_ARGS...), Args<_ARGS...>)
+	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(RetVal<_RetType>, _RetType (_PolicyClass::*funcPtr)(_ARGS...) const, Args<_ARGS...>)
 	{
 		return ASSERTION_IS_TRUE();
 	}
 
-	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
-	static constexpr ASSERTION_IS_TRUE API2Constable_MemberFunc(RetVal<_RetType>,
-																_RetType (_PolicyClass::*funcPtr)(_ARGS...),
-																Args<_ARGS...>,
-																Constness = _NON_CONST
-	)
+	// TODO consider moving "Is" into CTOR
+	// TODO consider adding some typedef for easier non const
+	// TODO consider making This class (Check) the base class for all policies
+	template <typename T = T_NON_CONST>
+	struct MemberFunc
 	{
-		return ASSERTION_IS_TRUE();
-	}
-
+		template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+		static constexpr ASSERTION_IS_TRUE Is(	RetVal<_RetType>,
+														_RetType (_PolicyClass::*funcPtr)(_ARGS...),
+														Args<_ARGS...>)
+		{
+			static_assert(std::is_same<T, T_NON_CONST>::value, "Unexpected Constness type.");
+			return ASSERTION_IS_TRUE();
+		}
+	};
 };
+
+template <>
+struct Check::MemberFunc<T_CONST>
+{
+	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
+	static constexpr ASSERTION_IS_TRUE Is(	RetVal<_RetType>,
+													_RetType (_PolicyClass::*funcPtr)(_ARGS...) const,
+													Args<_ARGS...>)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+};
+
 
 #endif /* ENFORCEPOLICY_H_ */

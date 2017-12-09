@@ -70,6 +70,9 @@ protected:
     {
         return "Hello, World!";
     }
+    void nonConst()
+	{
+	}
 };
 
 class LanguagePolicyGerman
@@ -79,6 +82,10 @@ protected:
     {
         return "Hallo Welt!";
     }
+
+    void nonConst()
+	{
+	}
 };
 
 template <class _PolicyClass>
@@ -91,11 +98,18 @@ public:
 	    using Access = RefProtected<_PolicyClass, PLanguagePolicy>;
 
 	    // different implementation options, chose yours...
+	    // TODO change Enforce to return ALWAYS_TRUE (change entire API to ALWAYS_TRUE, and rename ALWAYS_TRUE better)
 	    static constexpr bool Enforce(	message_p = &Access::message,
 	    								std::string (_PolicyClass::*)() const = &Access::message)
 	    {
-	    	return true;
+
+	    	return (Check::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
+	    			Check::MemberFunc<T_CONST>::Is(RetVal<std::string>(), &Access::message, Args<>()),
+					Check::MemberFunc<>::Is(RetVal<void>(), &Access::nonConst, Args<>()),
+	    			true);
 	    }
+
+
 };
 
 template <typename OutputPolicy, typename LanguagePolicy>
