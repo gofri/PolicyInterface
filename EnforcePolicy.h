@@ -160,6 +160,13 @@ struct Check
 		return ASSERTION_IS_TRUE();
 	}
 
+	template <typename T>
+	static constexpr ASSERTION_IS_TRUE Func(T)
+	{
+		return ASSERTION_IS_TRUE();
+	}
+
+
 	// TODO consider moving "Is" into CTOR
 	// TODO consider adding some typedef for easier non const
 	// TODO consider making This class (Check) the base class for all policies

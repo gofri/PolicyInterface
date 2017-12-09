@@ -106,6 +106,8 @@ public:
 	    	return (Check::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
 	    			Check::MemberFunc<T_CONST>::Is(RetVal<std::string>(), &Access::message, Args<>()),
 					Check::MemberFunc<>::Is(RetVal<void>(), &Access::nonConst, Args<>()),
+					Check::Func<std::string (_PolicyClass::*)() const>(&Access::message),
+					Check::Func<message_p>(&Access::message),
 	    			true);
 	    }
 
