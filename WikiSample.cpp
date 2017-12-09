@@ -88,10 +88,10 @@ protected:
 
 	typedef void (_PolicyClass::*print_p1)(std::string const &) const;
 
-	using Access = AccessProtected<_PolicyClass, POutputPolicy>;
+	using Access = RefProtected<_PolicyClass, POutputPolicy>;
 
     // different implementation options, chose yours...
-    static constexpr bool Enforce(print_p1 = &ObtainAccess<_PolicyClass>::A::print)
+    static constexpr bool Enforce(print_p1 = &Access::print)
     {
     	return true;
     }
@@ -269,7 +269,7 @@ struct WA
 {
 	static void print()
 	{
-		std::cout << std::is_same<decltype(&AccessProtected<Secret, WA>::func), void (Secret::*)()>::value << std::endl;
+		std::cout << std::is_same<decltype(&RefProtected<Secret, WA>::func), void (Secret::*)()>::value << std::endl;
 	}
 };
 
