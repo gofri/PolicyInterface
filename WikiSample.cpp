@@ -104,10 +104,9 @@ public:
 	    {
 
 	    	return (Check::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
-	    			Check::MemberFunc<T_CONST>::Is(RetVal<std::string>(), &Access::message, Args<>()),
-					Check::MemberFunc<>::Is(RetVal<void>(), &Access::nonConst, Args<>()),
-					Check::Func<std::string (_PolicyClass::*)() const>(&Access::message),
-					Check::Func<message_p>(&Access::message),
+	    			Check::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()),
+					Check::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()),
+					Check::AnyFunction<message_p>(&Access::message),
 	    			true);
 	    }
 
@@ -146,6 +145,23 @@ void functionThatExpects(const HelloWorld<A...>& h)
 }
 // *** END OF EDIT. ***
 
+static constexpr int non_const = 0;
+
+struct A
+{
+	template <typename T, typename... ARGS>
+	void func(T, ARGS...)
+	{
+		std::cout << "func1" << std::endl;
+	}
+
+	template <typename constype, typename T, typename... ARGS>
+	void func(T, ARGS...)
+	{
+		std::cout << "func2" << std::endl;
+	}
+};
+
 /**
  * EDITED: 	Each paragraph in the following code section contains:
  * 			both original and wrapped version of HelloWorld Host class.
@@ -173,6 +189,10 @@ int main()
 
     std::cout << std::boolalpha;
     std::cout << std::endl;
+
+    A a;
+    a.func(1, 2, 3);
+    a.func<int>(1, 2, 3);
 }
 
 
