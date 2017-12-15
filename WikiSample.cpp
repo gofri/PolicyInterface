@@ -103,23 +103,57 @@ public:
 	    								std::string (_PolicyClass::*)() const = &Access::message)
 	    {
 
-	    	return (Check::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
-	    			Check::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()),
-					Check::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()),
-					Check::AnyFunction<message_p>(&Access::message),
+	    	return (Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
+	    			Rule::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()),
+					Rule::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()),
+					Rule::AnyFunction<message_p>(&Access::message),
 	    			true);
 	    }
 
 
 };
 
+template <class _PolicyClass>
+class PLanguagePolicy2
+{
+public:
+		// Function description...
+	    typedef std::string (_PolicyClass::*message_p)() const;
+
+	    using Access = RefProtected<_PolicyClass, PLanguagePolicy2>;
+
+	    constexpr PLanguagePolicy2()
+	    {
+	    	/**
+	    	 * Rule Desc...
+	    	 */
+	    	SET_RULE(Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()));
+
+	    	/**
+	    	 * Rule Desc...
+	    	 */
+	    	SET_RULE(Rule::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()));
+
+	    	/**
+	    	 * Rule Desc...
+	    	 */
+	    	SET_RULE(Rule::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()));
+
+	    	/**
+	    	 * Rule Desc...
+	    	 */
+	    	SET_RULE(Rule::AnyFunction<message_p>(&Access::message));
+	    }
+};
+
+// TODO make it look better...
 template <typename OutputPolicy, typename LanguagePolicy>
-struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy, LanguagePolicy> >
+struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy2, LanguagePolicy> >
 {
 	HelloWorld_SafeWrapped() = default;
 
 	HelloWorld_SafeWrapped(const HelloWorld<OutputPolicy, LanguagePolicy>& copyCtor) :
-		HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy, LanguagePolicy> >(copyCtor)
+		HelloWorld< PolicyEnforcer<POutputPolicy, OutputPolicy>, PolicyEnforcer<PLanguagePolicy2, LanguagePolicy> >(copyCtor)
 	{
 	}
 
@@ -144,23 +178,6 @@ void functionThatExpects(const HelloWorld<A...>& h)
 	h.run();
 }
 // *** END OF EDIT. ***
-
-static constexpr int non_const = 0;
-
-struct A
-{
-	template <typename T, typename... ARGS>
-	void func(T, ARGS...)
-	{
-		std::cout << "func1" << std::endl;
-	}
-
-	template <typename constype, typename T, typename... ARGS>
-	void func(T, ARGS...)
-	{
-		std::cout << "func2" << std::endl;
-	}
-};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -189,10 +206,6 @@ int main()
 
     std::cout << std::boolalpha;
     std::cout << std::endl;
-
-    A a;
-    a.func(1, 2, 3);
-    a.func<int>(1, 2, 3);
 }
 
 

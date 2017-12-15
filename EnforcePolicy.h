@@ -47,6 +47,7 @@ struct STATIC_DERIVE<ACC_PRI, _Object> : private SD_UTIL<_Object>
 
 /**
  * Policy enforcer: enforce that PolicyClass conforms to the Policy
+ * TODO add policy enforcer that expects template class HostClass & class... Policies
  */
 template<template <class _PolicyClass> class _Policy, class _PolicyClass>
 class PolicyEnforcer : public _PolicyClass
@@ -55,21 +56,10 @@ private:
 	template <typename __PolicyWithClass>
 	struct Check_Policy
 	{
-		// Static-derive from policy to reach its protected members
-		struct Checker : STATIC_DERIVE< ACC_PUB, _Policy<_PolicyClass> >
-		{
-			static constexpr bool Check()
-			{
-				static_assert(__PolicyWithClass::Enforce(), "Type assertion failed");
-				static_assert(sizeof(_Policy<_PolicyClass>) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions");
-
-				return true;
-			}
-		};
-
 		constexpr Check_Policy()
 		{
-			static_assert(Checker::Check(), "Bad policy!");
+			static_assert((__PolicyWithClass(), true), "Type assertion failed");
+			static_assert(sizeof(__PolicyWithClass) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions");
 		}
 	};
 
@@ -89,7 +79,7 @@ class DuplexPolicyEnforcer : public PolicyEnforcer<Policy, PolicyClass>
  * RefProtected Grants _Accessor the access to reference protected data members and functions of _Object
  */
 template <class _Object, class _Accessor>
-struct RefProtected final : protected _Object
+struct RefProtected final : STATIC_DERIVE<ACC_PRO, _Object>
 {
 	friend _Accessor;
 };
@@ -117,16 +107,18 @@ struct Args
 
 struct __CONST {};
 
-struct Check
+// TODO consider making This class (Check) the base class for all policies
+struct Rule
 {
-	struct ASSERTION_IS_TRUE {};
+	using ASSERTION_IS_TRUE = bool;
+	static constexpr ASSERTION_IS_TRUE _TRUE = static_cast<ASSERTION_IS_TRUE>(1);
 
 	// General verison for static functions
 	template <typename _Signature, typename _RetType, typename... _ARGS>
 	static constexpr ASSERTION_IS_TRUE IsStatic(_RetType (*fp)(_ARGS...))
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid static function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	// General version for member functions
@@ -134,7 +126,7 @@ struct Check
 	static constexpr ASSERTION_IS_TRUE IsMember(_RetType (_Class::*fp)(_ARGS...))
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid member function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	// General version for const member functions
@@ -142,19 +134,15 @@ struct Check
 	static constexpr ASSERTION_IS_TRUE IsConstMember(_RetType (_Class::*fp)(_ARGS...) const)
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid const member function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
-
-	// TODO consider moving "Is" into CTOR
-	// TODO consider adding some typedef for easier non const
-	// TODO consider making This class (Check) the base class for all policies
 
 	// General verison for static functions
 	template <typename _Signature, typename _RetType, typename... _ARGS>
 	static constexpr ASSERTION_IS_TRUE AnyFunction(_RetType (*fp)(_ARGS...))
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid static function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	// General version for member functions
@@ -162,7 +150,7 @@ struct Check
 	static constexpr ASSERTION_IS_TRUE AnyFunction(_RetType (_Class::*fp)(_ARGS...))
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid member function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	// General version for const member functions
@@ -170,13 +158,13 @@ struct Check
 	static constexpr ASSERTION_IS_TRUE AnyFunction(_RetType (_Class::*fp)(_ARGS...) const)
 	{
 		static_assert(std::is_same<_Signature, decltype(fp)>::value, "Not a valid const member function");
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	template <typename _RetType, typename... _ARGS>
 	static constexpr ASSERTION_IS_TRUE StaticFunc(RetVal<_RetType>, Args<_ARGS...>, _RetType (*fp)(_ARGS...))
 	{
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
@@ -184,7 +172,7 @@ struct Check
 													_RetType (_PolicyClass::*funcPtr)(_ARGS...),
 													Args<_ARGS...>)
 	{
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 	template <class CONSTNESS, typename _RetType, typename... _ARGS, typename _PolicyClass>
@@ -192,7 +180,7 @@ struct Check
 													_RetType (_PolicyClass::*funcPtr)(_ARGS...) const,
 													Args<_ARGS...>)
 	{
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 
@@ -201,7 +189,7 @@ struct Check
 															_RetType (_PolicyClass::*funcPtr)(_ARGS...),
 															Args<_ARGS...>)
 	{
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 
 
@@ -210,8 +198,11 @@ struct Check
 														_RetType (_PolicyClass::*funcPtr)(_ARGS...) const,
 														Args<_ARGS...>)
 	{
-		return ASSERTION_IS_TRUE();
+		return _TRUE;
 	}
 };
+
+#define SET_RULE(_RULE) \
+		static_assert(((_RULE), true), "Policy Rule failed: " #_RULE)
 
 #endif /* ENFORCEPOLICY_H_ */
