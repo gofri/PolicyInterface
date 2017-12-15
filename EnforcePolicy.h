@@ -50,20 +50,13 @@ struct STATIC_DERIVE<ACC_PRI, _Object> : private SD_UTIL<_Object>
  * TODO add policy enforcer that expects template class HostClass & class... Policies
  */
 template<template <class _PolicyClass> class _Policy, class _PolicyClass>
-class PolicyEnforcer : public _PolicyClass
+struct PolicyEnforcer : public _PolicyClass
 {
-private:
-	template <typename __PolicyWithClass>
-	struct Check_Policy
+	constexpr PolicyEnforcer()
 	{
-		constexpr Check_Policy()
-		{
-			static_assert((__PolicyWithClass(), true), "Type assertion failed");
-			static_assert(sizeof(__PolicyWithClass) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions");
-		}
-	};
-
-	Check_Policy< _Policy<_PolicyClass> > TRIGGER_CTOR;
+		static_assert((_Policy<_PolicyClass>(), true), "Type assertion failed");
+		static_assert(sizeof(_Policy<_PolicyClass>) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions");
+	}
 };
 
 /**
@@ -93,16 +86,35 @@ struct RefProtected final : STATIC_DERIVE<ACC_PRO, _Object>
  ***************** Templat Simple API
  */
 
+template <typename... ARGS>
+struct Args
+{
+	constexpr Args() = default;
+};
+
+template <template <class> class... _Policies>
+struct PolicyList
+{
+	constexpr PolicyList() = default;
+};
+
+template <class... _Policies>
+struct PolicyClassList
+{
+	constexpr PolicyClassList() = default;
+};
+
 template <typename _Type>
 struct RetVal
 {
 	constexpr RetVal() = default;
 };
 
-template <typename... ARGS>
-struct Args
+
+template < template <class> class _Policy, class _PolicyClass>
+struct PolicyUnit
 {
-	constexpr Args() = default;
+	constexpr PolicyUnit() = default;
 };
 
 struct __CONST {};
@@ -203,7 +215,7 @@ struct Rule
 };
 
 #define SET_RULE(_RULE) \
-		static_assert(((_RULE), true), "Policy Rule failed: " #_RULE)
+		static_assert(((_RULE), true), "Policy Rule failed.")
 
 /**
  * TODO solve yarden maymon's problem with Split<T, pol1, pol2> in a way that allows using Class A{x(); y();} for 2 different X(), Y() policies

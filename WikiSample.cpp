@@ -170,6 +170,10 @@ struct HelloWorld_SafeWrapped : public HelloWorld< PolicyEnforcer<POutputPolicy,
 // Optional: force usage of HelloWorld_SafeWrapped by text replacement
 // #define HelloWorld HelloWorld_SafeWrapped
 
+template < template <class> class _Policy, class _PolicyClass>
+constexpr PolicyUnit<_Policy, _PolicyClass> ToPair(const _Policy<_PolicyClass>&)
+{
+}
 
 // An example of function that expects HelloWorld and does not need to be modified
 template<class... A>
@@ -178,6 +182,39 @@ void functionThatExpects(const HelloWorld<A...>& h)
 	h.run();
 }
 // *** END OF EDIT. ***
+
+#include <typeinfo>
+template <typename first, typename... rest>
+static bool print(Args<first, rest...>)
+{
+	print(Args<first>());
+	print(Args<rest...>());
+	return true;
+}
+template <typename first>
+static bool print(Args<first>)
+{
+	std::cout << typeid(first).name() << std::endl;
+	return true;
+}
+
+template <class _FirstCls, class... _RestCls, template <class> class _FirstPlc, template <class> class... _RestPlc>
+static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc, _RestPlc...>)
+{
+	static_assert(sizeof...(_RestCls) == sizeof...(_RestPlc), "Number of policies does not match number of policy-classes.");
+	return 	Match(PolicyClassList<_FirstCls>(), PolicyList<_FirstPlc>()) &&
+			Match(PolicyClassList<_RestCls...>(), PolicyList<_RestPlc...>());
+
+}
+template <class _FirstCls, template <class> class _FirstPlc>
+static bool Match(PolicyClassList<_FirstCls>, PolicyList<_FirstPlc>)
+{
+	static_assert((PolicyEnforcer<_FirstPlc, _FirstCls>(), true), "woohoo");
+	std::cout << typeid(_FirstPlc<_FirstCls>).name() << std::endl;
+	std::cout << typeid(_FirstCls).name() << std::endl;
+	return true;
+}
+
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -204,8 +241,13 @@ int main()
     HelloWorldGerman_SafeWrapped hello_world2_SafeWrapped;
     functionThatExpects(hello_world2_SafeWrapped); // prints "Hallo Welt!"
 
-    std::cout << std::boolalpha;
+    //std::cout << std::boolalpha;
     std::cout << std::endl;
+
+    //std::cout << std::noboolalpha;
+
+    Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
+
 }
 
 
