@@ -32,11 +32,8 @@ public:
 
 // *** EDITED: not from original source code. ***
 template <class _PolicyClass>
-class POutputPolicy
+struct POutputPolicy
 {
-
-protected:
-
 	// TODO explain: no support for the nothrow guarantee by standard definition
 	// TODO explain: White/Black-listing limitations due to language support - known issue
 	// TODO explain: Template functions limitations due to language support
@@ -45,11 +42,11 @@ protected:
 
 	using Access = RefProtected<_PolicyClass, POutputPolicy>;
 
-    // different implementation options, chose yours...
-    static constexpr bool Enforce(print_p1 = &Access::print)
-    {
-    	return true;
-    }
+	constexpr POutputPolicy(print_p1 = &Access::print)
+	{
+    	// SET_RULE(Rule::ConstMemberFunc(RetVal<void>(), &Access::print, Args<std::string const &>()));
+		SET_RULE(Rule::AnyFunction<print_p1>(&Access::print));
+	}
 };
 
 class OutputPolicyWriteToCout
@@ -99,18 +96,13 @@ public:
 
 	    // different implementation options, chose yours...
 	    // TODO change Enforce to return ALWAYS_TRUE (change entire API to ALWAYS_TRUE, and rename ALWAYS_TRUE better)
-	    static constexpr bool Enforce(	message_p = &Access::message,
-	    								std::string (_PolicyClass::*)() const = &Access::message)
+	    constexpr PLanguagePolicy()
 	    {
-
-	    	return (Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()),
-	    			Rule::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()),
-					Rule::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()),
-					Rule::AnyFunction<message_p>(&Access::message),
-	    			true);
+	    	SET_RULE(Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()));
+	    	SET_RULE(Rule::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()));
+	    	SET_RULE(Rule::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()));
+	    	SET_RULE(Rule::AnyFunction<message_p>(&Access::message));
 	    }
-
-
 };
 
 template <class _PolicyClass>
@@ -198,7 +190,11 @@ static bool print(Args<first>)
 	return true;
 }
 
-template <class _FirstCls, class... _RestCls, template <class> class _FirstPlc, template <class> class... _RestPlc>
+template <	class _FirstCls,
+			class... _RestCls,
+			template <class> class _FirstPlc,
+			template <class> class... _RestPlc
+			>
 static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc, _RestPlc...>)
 {
 	static_assert(sizeof...(_RestCls) == sizeof...(_RestPlc), "Number of policies does not match number of policy-classes.");
@@ -206,42 +202,33 @@ static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc,
 			Match(PolicyClassList<_RestCls...>(), PolicyList<_RestPlc...>());
 
 }
+
+// TODO unify API (which type is first)
 template <class _Cls, template <class> class _Plc>
 static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
 {
+	std::cout << typeid(_Cls).name() << " ";
+	std::cout << typeid(_Plc<_Cls>).name() << std::endl;
 	static_assert((PolicyEnforcer<_Plc, _Cls>(), true), "woohoo");
 	return true;
 }
 
-
-template <bool isChild, class _Single>
-struct DriveOnce_internal_single {};
-
-template <class _Single>
-struct DriveOnce_internal_single<true, _Single>
-{
-	DriveOnce_internal_single()
-	{
-		std::cout << "Not Derived: " << typeid(_Single).name() << std::endl;
-	}
-};
-
-template <class _Single>
-struct DriveOnce_internal_single<false, _Single> : _Single
-{
-	DriveOnce_internal_single()
-	{
-		std::cout << "Derived: " << typeid(_Single).name() << std::endl;
-	}
-};
-
-// TODO use Match mechanism within policies unifier
+// TODO use Match mechanism in conjunction with policies unifier
 
 template <class _First, class... Rest>
 struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
 
 template <class _Last>
 struct DriveOnce<_Last> : virtual _Last{};
+
+template <class _plcClsList, class _plcList>
+struct DeriveMaster
+{
+	DeriveMaster()
+	{
+		Match(_plcClsList(), _plcList());
+	}
+};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -274,6 +261,7 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
+    // DeriveMaster< PolicyClassList<OutputPolicyWriteToCout>, PolicyList<POutputPolicy> >();
 }
 
 

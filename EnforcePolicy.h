@@ -89,33 +89,33 @@ struct RefProtected final : STATIC_DERIVE<ACC_PRO, _Object>
 template <typename... ARGS>
 struct Args
 {
-	constexpr Args() = default;
+       constexpr Args() = default;
 };
 
 template <template <class> class... _Policies>
 struct PolicyList
 {
-	constexpr PolicyList() = default;
+       constexpr PolicyList() = default;
 };
 
 template <class... _Policies>
 struct PolicyClassList
 {
-	constexpr PolicyClassList() = default;
+       constexpr PolicyClassList() = default;
 };
 
 template <typename _Type>
 struct RetVal
 {
-	constexpr RetVal() = default;
+       constexpr RetVal() = default;
 };
-
 
 template < template <class> class _Policy, class _PolicyClass>
 struct PolicyUnit
 {
-	constexpr PolicyUnit() = default;
+       constexpr PolicyUnit() = default;
 };
+
 
 struct __CONST {};
 
@@ -173,6 +173,13 @@ struct Rule
 		return _TRUE;
 	}
 
+	// Temp fallback for template functions - cannot deduct with the methods above
+	template <typename _Signature>
+	static constexpr ASSERTION_IS_TRUE AnyFunction(_Signature)
+	{
+		return _TRUE;
+	}
+
 	template <typename _RetType, typename... _ARGS>
 	static constexpr ASSERTION_IS_TRUE StaticFunc(RetVal<_RetType>, Args<_ARGS...>, _RetType (*fp)(_ARGS...))
 	{
@@ -204,6 +211,7 @@ struct Rule
 		return _TRUE;
 	}
 
+	// TODO change interface (function last)
 
 	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
 	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(	RetVal<_RetType>,
