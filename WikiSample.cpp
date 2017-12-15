@@ -206,15 +206,52 @@ static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc,
 			Match(PolicyClassList<_RestCls...>(), PolicyList<_RestPlc...>());
 
 }
-template <class _FirstCls, template <class> class _FirstPlc>
-static bool Match(PolicyClassList<_FirstCls>, PolicyList<_FirstPlc>)
+template <class _Cls, template <class> class _Plc>
+static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
 {
-	static_assert((PolicyEnforcer<_FirstPlc, _FirstCls>(), true), "woohoo");
-	std::cout << typeid(_FirstPlc<_FirstCls>).name() << std::endl;
-	std::cout << typeid(_FirstCls).name() << std::endl;
+	static_assert((PolicyEnforcer<_Plc, _Cls>(), true), "woohoo");
 	return true;
 }
 
+// TODO use Match mechanism within policies unifier
+template <bool isBaseOf, class _First, class... Rest>
+struct DriveOnce : 	DriveOnce<	std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
+					_First>,
+					DriveOnce<false, Rest...>
+{
+};
+
+template <class _First, class... Rest>
+struct DriveOnce<true, _First, Rest...> : 	DriveOnce<std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
+													_First>,
+											DriveOnce<false, Rest...>
+{
+};
+
+template <class _First, class... Rest>
+struct DriveOnce<false, _First, Rest...> : 	DriveOnce<std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
+													_First>,
+											DriveOnce<false, Rest...>
+{
+};
+
+template <class _Single>
+struct DriveOnce<true, _Single>
+{
+	DriveOnce()
+	{
+		std::cout << "Not Derived: " << typeid(_Single).name() << std::endl;
+	}
+};
+
+template <class _Single>
+struct DriveOnce<false, _Single> : _Single
+{
+	DriveOnce()
+	{
+		std::cout << "Derived: " << typeid(_Single).name() << std::endl;
+	}
+};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -247,7 +284,7 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
-
+    DriveOnce<false, OutputPolicyWriteToCout, LanguagePolicyEnglish, OutputPolicyWriteToCout, OutputPolicyWriteToCout, LanguagePolicyGerman>();
 }
 
 
