@@ -236,20 +236,12 @@ struct DriveOnce_internal_single<false, _Single> : _Single
 };
 
 // TODO use Match mechanism within policies unifier
-template <bool isBaseOf, class _First, class... Rest>
-struct DriveOnce_internal : 	DriveOnce_internal_single<	std::is_base_of<_First, DriveOnce_internal<true, Rest...>>::value, _First>,
-								DriveOnce_internal<false, Rest...>
-{
-};
 
-template <bool isBaseOf, class _Single>
-struct DriveOnce_internal<isBaseOf, _Single> : DriveOnce_internal_single<isBaseOf, _Single>
-{
-};
-
-// Derive once public version
 template <class _First, class... Rest>
-struct DriveOnce : DriveOnce_internal<true, _First, Rest...> {};
+struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
+
+template <class _Last>
+struct DriveOnce<_Last> : virtual _Last{};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -282,7 +274,6 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
-    DriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, OutputPolicyWriteToCout, OutputPolicyWriteToCout, LanguagePolicyGerman>();
 }
 
 
