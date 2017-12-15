@@ -215,43 +215,32 @@ static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
 
 // TODO use Match mechanism within policies unifier
 template <bool isBaseOf, class _First, class... Rest>
-struct DriveOnce : 	DriveOnce<	std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
+struct DriveOnce_internal : 	DriveOnce_internal<	std::is_base_of<_First, DriveOnce_internal<true, Rest...>>::value,
 					_First>,
-					DriveOnce<false, Rest...>
-{
-};
-
-template <class _First, class... Rest>
-struct DriveOnce<true, _First, Rest...> : 	DriveOnce<std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
-													_First>,
-											DriveOnce<false, Rest...>
-{
-};
-
-template <class _First, class... Rest>
-struct DriveOnce<false, _First, Rest...> : 	DriveOnce<std::is_base_of<_First, DriveOnce<true, Rest...>>::value,
-													_First>,
-											DriveOnce<false, Rest...>
+					DriveOnce_internal<false, Rest...>
 {
 };
 
 template <class _Single>
-struct DriveOnce<true, _Single>
+struct DriveOnce_internal<true, _Single>
 {
-	DriveOnce()
+	DriveOnce_internal()
 	{
 		std::cout << "Not Derived: " << typeid(_Single).name() << std::endl;
 	}
 };
 
 template <class _Single>
-struct DriveOnce<false, _Single> : _Single
+struct DriveOnce_internal<false, _Single> : _Single
 {
-	DriveOnce()
+	DriveOnce_internal()
 	{
 		std::cout << "Derived: " << typeid(_Single).name() << std::endl;
 	}
 };
+
+template <class _First, class... Rest>
+struct DriveOnce : DriveOnce_internal<true, _First, Rest...> {};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -284,7 +273,7 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
-    DriveOnce<false, OutputPolicyWriteToCout, LanguagePolicyEnglish, OutputPolicyWriteToCout, OutputPolicyWriteToCout, LanguagePolicyGerman>();
+    DriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, OutputPolicyWriteToCout, OutputPolicyWriteToCout, LanguagePolicyGerman>();
 }
 
 
