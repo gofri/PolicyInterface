@@ -213,32 +213,41 @@ static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
 	return true;
 }
 
-// TODO use Match mechanism within policies unifier
-template <bool isBaseOf, class _First, class... Rest>
-struct DriveOnce_internal : 	DriveOnce_internal<	std::is_base_of<_First, DriveOnce_internal<true, Rest...>>::value,
-					_First>,
-					DriveOnce_internal<false, Rest...>
-{
-};
+
+template <bool isChild, class _Single>
+struct DriveOnce_internal_single {};
 
 template <class _Single>
-struct DriveOnce_internal<true, _Single>
+struct DriveOnce_internal_single<true, _Single>
 {
-	DriveOnce_internal()
+	DriveOnce_internal_single()
 	{
 		std::cout << "Not Derived: " << typeid(_Single).name() << std::endl;
 	}
 };
 
 template <class _Single>
-struct DriveOnce_internal<false, _Single> : _Single
+struct DriveOnce_internal_single<false, _Single> : _Single
 {
-	DriveOnce_internal()
+	DriveOnce_internal_single()
 	{
 		std::cout << "Derived: " << typeid(_Single).name() << std::endl;
 	}
 };
 
+// TODO use Match mechanism within policies unifier
+template <bool isBaseOf, class _First, class... Rest>
+struct DriveOnce_internal : 	DriveOnce_internal_single<	std::is_base_of<_First, DriveOnce_internal<true, Rest...>>::value, _First>,
+								DriveOnce_internal<false, Rest...>
+{
+};
+
+template <bool isBaseOf, class _Single>
+struct DriveOnce_internal<isBaseOf, _Single> : DriveOnce_internal_single<isBaseOf, _Single>
+{
+};
+
+// Derive once public version
 template <class _First, class... Rest>
 struct DriveOnce : DriveOnce_internal<true, _First, Rest...> {};
 
