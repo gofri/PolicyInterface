@@ -55,7 +55,7 @@ struct PolicyEnforcer : public _PolicyClass
 	constexpr PolicyEnforcer()
 	{
 		static_assert((_Policy<_PolicyClass>(), true), "Type assertion failed");
-		static_assert(sizeof(_Policy<_PolicyClass>) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions");
+		static_assert(sizeof(_Policy<_PolicyClass>) == 1, "Unexpected _Policy class size... please avoid using data members and virtual functions in policies.");
 	}
 };
 
@@ -231,5 +231,58 @@ struct Rule
  * 		Then try to make a general<...> that would solve that internally
  *		Idea: implmenet Unify<Args...> that would output unique classes (no duplicates)
  */
+
+
+template <	class _FirstCls,
+			class... _RestCls,
+			template <class> class _FirstPlc,
+			template <class> class... _RestPlc
+			>
+static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc, _RestPlc...>)
+{
+	static_assert(sizeof...(_RestCls) == sizeof...(_RestPlc), "Number of policies does not match number of policy-classes.");
+	return 	Match(PolicyClassList<_FirstCls>(), PolicyList<_FirstPlc>()) &&
+			Match(PolicyClassList<_RestCls...>(), PolicyList<_RestPlc...>());
+
+}
+
+// TODO unify API (which type is first)
+#include <typeinfo>
+
+template <class _Cls, template <class> class _Plc>
+static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
+{
+	std::cout << typeid(_Cls).name() << " ";
+	std::cout << typeid(_Plc<_Cls>).name() << std::endl;
+	static_assert((PolicyEnforcer<_Plc, _Cls>(), true), "woohoo");
+	return true;
+}
+
+// TODO use Match mechanism in conjunction with policies unifier
+
+template <class _First, class... Rest>
+struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
+
+template <class _Last>
+struct DriveOnce<_Last> : virtual _Last{};
+
+template <class... _Policies>
+struct ExtendingPolicyClassList : PolicyClassList<_Policies...>, DriveOnce<_Policies...>
+{
+       constexpr ExtendingPolicyClassList() = default;
+};
+
+template <class _plcClsList, class _plcList>
+// TODO check whether EnforcePolicy would work too in case using virtual inheritance
+struct DeriveMaster : _plcClsList // TODO add class that expects PolicyClassList and derives from its members. consider using function call + decltype (GetPolicyClasses that returns DeriveOnce<args...>)
+{
+	using _plcClsList::print;
+
+	DeriveMaster()
+	{
+		// TODO force ExtendingPolicyClassList
+		Match(_plcClsList(), _plcList());
+	}
+};
 
 #endif /* ENFORCEPOLICY_H_ */

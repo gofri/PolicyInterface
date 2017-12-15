@@ -175,58 +175,19 @@ void functionThatExpects(const HelloWorld<A...>& h)
 }
 // *** END OF EDIT. ***
 
-#include <typeinfo>
-template <typename first, typename... rest>
-static bool print(Args<first, rest...>)
+template <class... plcCls>
+using HelloWorldPolicy = DeriveMaster<	ExtendingPolicyClassList<plcCls...>,
+										PolicyList<POutputPolicy, PLanguagePolicy> >;
+
+template <class... plcCls>
+struct HelloWorldBeautiful : HelloWorldPolicy<plcCls...>
 {
-	print(Args<first>());
-	print(Args<rest...>());
-	return true;
-}
-template <typename first>
-static bool print(Args<first>)
-{
-	std::cout << typeid(first).name() << std::endl;
-	return true;
-}
+	using HelloWorldPolicy<plcCls...>::print;
+	using HelloWorldPolicy<plcCls...>::message;
 
-template <	class _FirstCls,
-			class... _RestCls,
-			template <class> class _FirstPlc,
-			template <class> class... _RestPlc
-			>
-static bool Match(PolicyClassList<_FirstCls, _RestCls...>, PolicyList<_FirstPlc, _RestPlc...>)
-{
-	static_assert(sizeof...(_RestCls) == sizeof...(_RestPlc), "Number of policies does not match number of policy-classes.");
-	return 	Match(PolicyClassList<_FirstCls>(), PolicyList<_FirstPlc>()) &&
-			Match(PolicyClassList<_RestCls...>(), PolicyList<_RestPlc...>());
-
-}
-
-// TODO unify API (which type is first)
-template <class _Cls, template <class> class _Plc>
-static bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
-{
-	std::cout << typeid(_Cls).name() << " ";
-	std::cout << typeid(_Plc<_Cls>).name() << std::endl;
-	static_assert((PolicyEnforcer<_Plc, _Cls>(), true), "woohoo");
-	return true;
-}
-
-// TODO use Match mechanism in conjunction with policies unifier
-
-template <class _First, class... Rest>
-struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
-
-template <class _Last>
-struct DriveOnce<_Last> : virtual _Last{};
-
-template <class _plcClsList, class _plcList>
-struct DeriveMaster
-{
-	DeriveMaster()
+	void run() const
 	{
-		Match(_plcClsList(), _plcList());
+		print(message());
 	}
 };
 
@@ -261,7 +222,13 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
-    // DeriveMaster< PolicyClassList<OutputPolicyWriteToCout>, PolicyList<POutputPolicy> >();
+    DeriveMaster< 	ExtendingPolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>,
+					PolicyList<POutputPolicy, PLanguagePolicy2, PLanguagePolicy> >();
+
+    DriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>();
+
+    HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
+    hwb.run();
 }
 
 
