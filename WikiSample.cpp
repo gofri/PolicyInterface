@@ -241,9 +241,25 @@ int main()
     hwb.run();
 
     Args<OutputPolicyWriteToCout, LanguagePolicyEnglish> x;
-    DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish>::List y;
+    Args<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, LanguagePolicyEnglish> x2;
+    DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, LanguagePolicyEnglish>::List y;
     std::cout << typeid(decltype(x)).name() << std::endl;
+    std::cout << typeid(decltype(x2)).name() << std::endl;
     std::cout << typeid(decltype(y)).name() << std::endl;
+
+    std::cout << typeid(
+    		decltype(
+    				Args<>::AddUnique(x, Args<OutputPolicyWriteToCout>())
+					)
+			).name() << std::endl;
+
+    std::cout << typeid(
+    		decltype(
+    				Args<>::AddUnique(x, Args<LanguagePolicyGerman>())
+					)
+			).name() << std::endl;
+
+    std::cout << Args<>::IsIn(Args<int, char>(), Args<int>()) << std::endl;
 }
 
 

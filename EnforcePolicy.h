@@ -103,6 +103,45 @@ struct Args
     	   return Args<ARGS..., otherArgs...>();
        }
 
+	   template <typename _First, typename... _Rest, typename _Arg>
+	   static constexpr bool IsIn(const Args<_First, _Rest...>, const Args<_Arg>)
+	   {
+		   return  Args<>::IsIn(Args<_First>(), Args<_Arg>()) ||
+				   Args<>::IsIn(Args<_Rest...>(), Args<_Arg>());
+	   }
+
+	   template <typename _Last, typename _Arg>
+	   static constexpr bool IsIn(const Args<_Last>, const Args<_Arg>)
+	   {
+		   return std::is_same<_Last, _Arg>::value;
+	   }
+
+	   template <bool flag, typename Checked, typename... _ARGS>
+	   struct Hold
+	   {
+		   using List = Args<_ARGS...>;
+	   };
+
+	   template <typename Checked, typename... _ARGS>
+	   struct HoldWrap
+	   {
+		   using List = typename Hold< IsIn(Args<_ARGS...>(), Args<Checked>()), Checked, _ARGS...>::List;
+	   };
+
+	   template <typename Checked, typename... _ARGS>
+	   struct Hold<false, Checked, _ARGS...>
+	   {
+		   using List = Args<Checked, _ARGS...>;
+	   };
+
+	   template <typename... _ARGS, typename _Arg>
+	   static constexpr typename HoldWrap<_ARGS..., _Arg>::List AddUnique(const Args<_ARGS...>, const Args<_Arg>)
+	   {
+		   return HoldWrap<_ARGS..., _Arg>::List();
+	   }
+
+       // TOOD add AddSorted that tries to add a Arg<single> to Arg<multiple> only if not inside
+
        struct DerivedType : ARGS... {};
 };
 
@@ -306,6 +345,8 @@ struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 	using PrevList = typename ItrPrev::List;
 
 	using Current = _First;
+
+	// TODO doesnt work properly now. change Args<Current> with decltype(function): Args<...> GetIfNotBase<_First, Rest...>
 	using List = decltype(Args<Current>() + PrevList());
 };
 
