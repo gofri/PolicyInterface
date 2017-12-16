@@ -44,7 +44,9 @@ struct POutputPolicy
 
 	constexpr POutputPolicy(print_p1 = &Access::print)
 	{
+		// TODO try fix: Non-Any function with variations
     	// SET_RULE(Rule::ConstMemberFunc(RetVal<void>(), &Access::print, Args<std::string const &>()));
+
 		SET_RULE(Rule::AnyFunction<print_p1>(&Access::print));
 	}
 };
@@ -222,8 +224,8 @@ int main()
     //std::cout << std::noboolalpha;
 
     Match(PolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish>(), PolicyList<POutputPolicy, PLanguagePolicy2>());
-    DeriveMaster< 	ExtendingPolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>,
-					PolicyList<POutputPolicy, PLanguagePolicy2, PLanguagePolicy> >();
+    //DeriveMaster< 	ExtendingPolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>,
+	//				PolicyList<POutputPolicy, PLanguagePolicy2, PLanguagePolicy> >();
 
     DriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>();
 
