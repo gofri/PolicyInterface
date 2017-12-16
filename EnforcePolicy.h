@@ -130,6 +130,7 @@ struct PolicyUnit
 
 
 struct __CONST {};
+struct __ITR_END {};
 
 // TODO consider changing API. Note - can use RetVal<>, Args<> as template params
 // TODO	consider adding Templated<...> that expects Access for type deduction.
@@ -294,15 +295,22 @@ struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOn
 template<class _First, class... Rest>
 struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 {
-	using PrevList = typename DeriveOnce<Rest...>::List;
-	using List = decltype(Args<_First>() + PrevList());
+	using ItrPrev = DeriveOnce<Rest...>;
+	using PrevList = typename ItrPrev::List;
+
+	using Current = _First;
+	using List = decltype(Args<Current>() + PrevList());
 };
 
 // Beautify DeriveOnce2 and remove old DeriveOnce
 template <class _Last>
 struct DeriveOnce<_Last> : _Last
 {
-	using List = Args<_Last>;
+	using ItrPrev = __ITR_END;
+	using PrevList = Args<>;
+
+	using Current = _Last;
+	using List = Args<Current>;
 };
 
 // TODO check whether EnforcePolicy would work too in case using virtual inheritance
