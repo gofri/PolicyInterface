@@ -180,7 +180,7 @@ void functionThatExpects(const HelloWorld<A...>& h)
 // *** END OF EDIT. ***
 
 template <class... plcCls>
-using HelloWorldPolicy = DeriveMaster<	ExtendingPolicyClassList<plcCls...>,
+using HelloWorldPolicy = DeriveMaster<	PolicyClassList<plcCls...>,
 										PolicyList<POutputPolicy, PLanguagePolicy> >;
 
 template <class... plcCls>

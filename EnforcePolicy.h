@@ -295,18 +295,12 @@ struct DriveOnce2<_Last> : _Last
 {
 };
 
-template <class... _Policies>
-struct ExtendingPolicyClassList : PolicyClassList<_Policies...>, DriveOnce2<_Policies...>
-{
-       constexpr ExtendingPolicyClassList() = default;
-};
-
 // TODO check whether EnforcePolicy would work too in case using virtual inheritance
 template <class _plcClsList, class _plcList>
 struct DeriveMaster;
 
 template <class... _plcClsList, template <class> class... _plcList>
-struct DeriveMaster<ExtendingPolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : ExtendingPolicyClassList<_plcClsList...>
+struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DriveOnce2<_plcClsList...>
 {
 	constexpr DeriveMaster()
 	{
