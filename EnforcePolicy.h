@@ -123,24 +123,27 @@ struct Args
 	   };
 
 	   template <typename Checked, typename... _ARGS>
-	   struct HoldWrap
-	   {
-		   using List = typename Hold< IsIn(Args<_ARGS...>(), Args<Checked>()), Checked, _ARGS...>::List;
-	   };
-
-	   template <typename Checked, typename... _ARGS>
 	   struct Hold<false, Checked, _ARGS...>
 	   {
 		   using List = Args<Checked, _ARGS...>;
 	   };
 
-	   template <typename... _ARGS, typename _Arg>
-	   static constexpr typename HoldWrap<_ARGS..., _Arg>::List AddUnique(const Args<_ARGS...>, const Args<_Arg>)
+	   template <typename Checked, typename... _ARGS>
+	   struct HoldWrap
 	   {
-		   return HoldWrap<_ARGS..., _Arg>::List();
+		   using List = typename Hold< IsIn(Args<_ARGS...>(), Args<Checked>()), Checked, _ARGS...>::List;
+	   };
+
+	   template <typename _Arg, typename... _ARGS>
+	   static constexpr typename HoldWrap<_Arg, _ARGS...>::List
+	   AddUnique(const Args<_ARGS...>, const Args<_Arg>)
+	   {
+		   return HoldWrap<_Arg, _ARGS...>::List();
 	   }
 
        // TOOD add AddSorted that tries to add a Arg<single> to Arg<multiple> only if not inside
+
+	   static constexpr size_t Length = sizeof...(ARGS);
 
        struct DerivedType : ARGS... {};
 };
@@ -347,7 +350,7 @@ struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 	using Current = _First;
 
 	// TODO doesnt work properly now. change Args<Current> with decltype(function): Args<...> GetIfNotBase<_First, Rest...>
-	using List = decltype(Args<Current>() + PrevList());
+	using List = decltype(Args<>::AddUnique(PrevList(), Args<Current>()));
 };
 
 // Beautify DeriveOnce2 and remove old DeriveOnce

@@ -240,12 +240,20 @@ int main()
     HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
     hwb.run();
 
-    Args<OutputPolicyWriteToCout, LanguagePolicyEnglish> x;
+    Args<LanguagePolicyEnglish, OutputPolicyWriteToCout> x;
     Args<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, LanguagePolicyEnglish> x2;
     DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, LanguagePolicyEnglish>::List y;
+    DeriveOnce<LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>::List y2;
     std::cout << typeid(decltype(x)).name() << std::endl;
+    std::cout << decltype(x)::Length << std::endl;
     std::cout << typeid(decltype(x2)).name() << std::endl;
+    std::cout << decltype(x2)::Length << std::endl;
     std::cout << typeid(decltype(y)).name() << std::endl;
+    std::cout << decltype(y)::Length << std::endl;
+    std::cout << typeid(decltype(y2)).name() << std::endl;
+    std::cout << decltype(y2)::Length << std::endl;
+
+    std::cout << std::endl;
 
     std::cout << typeid(
     		decltype(
