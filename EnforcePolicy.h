@@ -8,6 +8,12 @@
 #ifndef ENFORCEPOLICY_H_
 #define ENFORCEPOLICY_H_
 
+template <template <class> class _Object, typename _Param>
+_Param GetParamFromTemplate(_Object<_Param> p)
+{
+	return p;
+}
+
 struct ACC_PUB;
 struct ACC_PRO;
 struct ACC_PRI;
@@ -91,6 +97,12 @@ struct Args
 {
        constexpr Args() = default;
 };
+
+template <typename... myArgs, typename... otherArgs>
+static constexpr Args<myArgs..., otherArgs...> Combine(const Args<myArgs...>&, const Args<otherArgs...>&)
+{
+	   return Args<myArgs..., otherArgs...>();
+}
 
 template <template <class> class... _Policies>
 struct PolicyList
@@ -261,10 +273,10 @@ static constexpr bool Match(PolicyClassList<_Cls>, PolicyList<_Plc>)
 }
 
 template <class _First, class... Rest>
-struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
+struct VirtualDerive : virtual _First, VirtualDerive<Rest...> {};
 
 template <class _Last>
-struct DriveOnce<_Last> : virtual _Last{};
+struct VirtualDerive<_Last> : virtual _Last{};
 
 template <bool isBase, class cls>
 struct BaseChecker {};
@@ -272,35 +284,31 @@ struct BaseChecker {};
 template <class cls>
 struct BaseChecker<false, cls> : public cls {};
 
-template <class _First, class... Rest> struct DriveOnce2;
+template <class _First, class... Rest> struct DeriveOnce;
 
 template <class _ToCheck, class... Rest>
-struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DriveOnce2<Rest...> >::value, _ToCheck >
+struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOnce<Rest...> >::value, _ToCheck >
 {
 };
 
-template
-<
-	class _First,
-	class... Rest
->
-struct DriveOnce2 :	DriveOnce2<Rest...>,
-					DeriveIfNotBase<_First, Rest...>
+template<class _First, class... Rest>
+struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 {
+	using List = decltype(Combine(Args<_First>(), typename DeriveOnce<Rest...>::List()));
 };
 
 // Beautify DeriveOnce2 and remove old DeriveOnce
 template <class _Last>
-struct DriveOnce2<_Last> : _Last
+struct DeriveOnce<_Last> : _Last
 {
+	using List = Args<_Last>;
 };
 
 // TODO check whether EnforcePolicy would work too in case using virtual inheritance
-template <class _plcClsList, class _plcList>
-struct DeriveMaster;
+template <class _plcClsList, class _plcList> struct DeriveMaster;
 
 template <class... _plcClsList, template <class> class... _plcList>
-struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DriveOnce2<_plcClsList...>
+struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DeriveOnce<_plcClsList...>
 {
 	constexpr DeriveMaster()
 	{

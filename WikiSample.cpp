@@ -195,10 +195,16 @@ struct HelloWorldBeautiful : HelloWorldPolicy<plcCls...>
 	}
 };
 
+void func(Args<OutputPolicyWriteToCout, LanguagePolicyEnglish>)
+{
+	std::cout << "yay!" << std::endl;
+}
+
 /**
  * EDITED: 	Each paragraph in the following code section contains:
  * 			both original and wrapped version of HelloWorld Host class.
  */
+#include <typeinfo>
 int main()
 {
     /* Example 1 */
@@ -229,10 +235,15 @@ int main()
     //DeriveMaster< 	ExtendingPolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>,
 	//				PolicyList<POutputPolicy, PLanguagePolicy2, PLanguagePolicy> >();
 
-    DriveOnce2<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyGerman, LanguagePolicyEnglish>();
+    DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyGerman, LanguagePolicyEnglish>();
 
     HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
     hwb.run();
+
+    Args<OutputPolicyWriteToCout, LanguagePolicyEnglish> x;
+    DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish>::List y;
+    std::cout << typeid(decltype(x)).name() << std::endl;
+    std::cout << typeid(decltype(y)).name() << std::endl;
 }
 
 
