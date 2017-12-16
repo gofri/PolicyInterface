@@ -102,6 +102,8 @@ struct Args
        {
     	   return Args<ARGS..., otherArgs...>();
        }
+
+       struct DerivedType : ARGS... {};
 };
 
 template <template <class> class... _Policies>
@@ -292,6 +294,11 @@ struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOn
 {
 };
 
+// TODO Add Wrapper class to DeriveOnce (Unify)
+//		Unify:
+//		using List = Args<filtered> => DeriveOnce<...>::List
+//		using DerivedType = Args<filtered>::DerivedType => DeriveOnce<...>::List
+
 template<class _First, class... Rest>
 struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 {
@@ -317,7 +324,7 @@ struct DeriveOnce<_Last> : _Last
 template <class _plcClsList, class _plcList> struct DeriveMaster;
 
 template <class... _plcClsList, template <class> class... _plcList>
-struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DeriveOnce<_plcClsList...>
+struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DeriveOnce<_plcClsList...>::List::DerivedType
 {
 	constexpr DeriveMaster()
 	{
