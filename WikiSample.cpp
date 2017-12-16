@@ -30,6 +30,7 @@ public:
     }
 };
 
+
 // *** EDITED: not from original source code. ***
 template <class _PolicyClass>
 struct POutputPolicy
@@ -42,9 +43,10 @@ struct POutputPolicy
 
 	using Access = RefProtected<_PolicyClass, POutputPolicy>;
 
-
 	constexpr POutputPolicy()
 	{
+		// static_assert(std::is_base_of<POutputPolicy<_PolicyClass>, _PolicyClass>::value, "base");
+
 		// TODO find a smoother solution
     	SET_RULE(Rule::ConstMemberFunc<Access, void, std::string const &>(&Access::print));
 		SET_RULE(Rule::AnyFunction<print_p1>(&Access::print));
@@ -227,10 +229,11 @@ int main()
     //DeriveMaster< 	ExtendingPolicyClassList<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>,
 	//				PolicyList<POutputPolicy, PLanguagePolicy2, PLanguagePolicy> >();
 
-    DriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish>();
+    DriveOnce2<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyGerman, LanguagePolicyEnglish>();
 
     HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
     hwb.run();
 }
+
 
 

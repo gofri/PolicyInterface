@@ -266,8 +266,37 @@ struct DriveOnce : virtual _First, DriveOnce<Rest...> {};
 template <class _Last>
 struct DriveOnce<_Last> : virtual _Last{};
 
+template <bool isBase, class cls>
+struct BaseChecker {};
+
+template <class cls>
+struct BaseChecker<false, cls> : public cls {};
+
+template <class _First, class... Rest> struct DriveOnce2;
+
+template <class _ToCheck, class... Rest>
+struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DriveOnce2<Rest...> >::value, _ToCheck >
+{
+};
+
+template
+<
+	class _First,
+	class... Rest
+>
+struct DriveOnce2 :	DriveOnce2<Rest...>,
+					DeriveIfNotBase<_First, Rest...>
+{
+};
+
+// Beautify DeriveOnce2 and remove old DeriveOnce
+template <class _Last>
+struct DriveOnce2<_Last> : _Last
+{
+};
+
 template <class... _Policies>
-struct ExtendingPolicyClassList : PolicyClassList<_Policies...>, DriveOnce<_Policies...>
+struct ExtendingPolicyClassList : PolicyClassList<_Policies...>, DriveOnce2<_Policies...>
 {
        constexpr ExtendingPolicyClassList() = default;
 };
@@ -277,13 +306,12 @@ template <class _plcClsList, class _plcList>
 struct DeriveMaster;
 
 template <class... _plcClsList, template <class> class... _plcList>
-struct DeriveMaster<ExtendingPolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : ExtendingPolicyClassList<_plcClsList...> // TODO add class that expects PolicyClassList and derives from its members. consider using function call + decltype (GetPolicyClasses that returns DeriveOnce<args...>)
+struct DeriveMaster<ExtendingPolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : ExtendingPolicyClassList<_plcClsList...>
 {
 	constexpr DeriveMaster()
 	{
 		static_assert(Match(PolicyClassList<_plcClsList...>(), PolicyList<_plcList...>()), "Full match");
 	}
 };
-
 
 #endif /* ENFORCEPOLICY_H_ */
