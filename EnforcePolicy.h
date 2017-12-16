@@ -119,7 +119,9 @@ struct PolicyUnit
 
 struct __CONST {};
 
-// TODO consider making This class (Check) the base class for all policies
+// TODO consider changing API. Note - can use RetVal<>, Args<> as template params
+// TODO	consider adding Templated<...> that expects Access for type deduction.
+//		Note - policy make should no be aware of whether or not the client uses template. Thus make Access required.
 struct Rule
 {
 	using ASSERTION_IS_TRUE = bool;
@@ -213,16 +215,27 @@ struct Rule
 
 	// TODO change interface (function last)
 
-	template <typename _RetType, typename... _ARGS, typename _PolicyClass>
-	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(	RetVal<_RetType>,
-														_RetType (_PolicyClass::*funcPtr)(_ARGS...) const,
-														Args<_ARGS...>)
+	template <typename _PolicyClass, typename _RetType, typename... _ARGS>
+	static constexpr ASSERTION_IS_TRUE ConstMemberFunc(_RetType (_PolicyClass::*)(_ARGS...) const)
 	{
 		return _TRUE;
 	}
+
+	template <typename _RetType, typename... _ARGS>
+	struct Templated
+	{
+		template <class _plcCls>
+		using funcPtr = _RetType (_plcCls::*)(_ARGS...) const;
+
+		template <typename _PolicyClass>
+		static constexpr ASSERTION_IS_TRUE ConstMemberFunc(funcPtr<_PolicyClass>)
+		{
+			return _TRUE;
+		}
+	};
 };
 
-#define SET_RULE(_RULE) \
+#define SET_RULE(_RULE...) \
 		static_assert(((_RULE), true), "Policy Rule failed.")
 
 /**

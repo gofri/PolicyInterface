@@ -42,11 +42,11 @@ struct POutputPolicy
 
 	using Access = RefProtected<_PolicyClass, POutputPolicy>;
 
-	constexpr POutputPolicy(print_p1 = &Access::print)
-	{
-		// TODO try fix: Non-Any function with variations
-    	// SET_RULE(Rule::ConstMemberFunc(RetVal<void>(), &Access::print, Args<std::string const &>()));
 
+	constexpr POutputPolicy()
+	{
+		// TODO find a smoother solution
+    	SET_RULE(Rule::ConstMemberFunc<Access, void, std::string const &>(&Access::print));
 		SET_RULE(Rule::AnyFunction<print_p1>(&Access::print));
 	}
 };
@@ -100,7 +100,7 @@ public:
 	    // TODO change Enforce to return ALWAYS_TRUE (change entire API to ALWAYS_TRUE, and rename ALWAYS_TRUE better)
 	    constexpr PLanguagePolicy()
 	    {
-	    	SET_RULE(Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()));
+	    	//SET_RULE(Rule::ConstMemberFunc<Access, std::string>(&Access::message));
 	    	SET_RULE(Rule::MemberFunc<__CONST>(RetVal<std::string>(), &Access::message, Args<>()));
 	    	SET_RULE(Rule::MemberFunc(RetVal<void>(), &Access::nonConst, Args<>()));
 	    	SET_RULE(Rule::AnyFunction<message_p>(&Access::message));
@@ -121,7 +121,7 @@ public:
 	    	/**
 	    	 * Rule Desc...
 	    	 */
-	    	SET_RULE(Rule::ConstMemberFunc(RetVal<std::string>(), &Access::message, Args<>()));
+	    	// SET_RULE(Rule::Templated<std::string>::ConstMemberFunc(&Access::message));
 
 	    	/**
 	    	 * Rule Desc...
