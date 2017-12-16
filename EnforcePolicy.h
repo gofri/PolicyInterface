@@ -47,7 +47,7 @@ struct STATIC_DERIVE<ACC_PRI, _Object> : private SD_UTIL<_Object>
 
 /**
  * Policy enforcer: enforce that PolicyClass conforms to the Policy
- * TODO add policy enforcer that expects template class HostClass & class... Policies
+ * TODO public derive where missing the keyword public
  */
 template<template <class _PolicyClass> class _Policy, class _PolicyClass>
 struct PolicyEnforcer : public _PolicyClass
@@ -237,14 +237,6 @@ struct Rule
 
 #define SET_RULE(_RULE...) \
 		static_assert(((_RULE), true), "Policy Rule failed.")
-
-/**
- * TODO solve yarden maymon's problem with Split<T, pol1, pol2> in a way that allows using Class A{x(); y();} for 2 different X(), Y() policies
- * 		First try to solve assuming you expect the splitted one
- * 		Then try to make a general<...> that would solve that internally
- *		Idea: implmenet Unify<Args...> that would output unique classes (no duplicates)
- */
-
 
 template <	class _FirstCls,
 			class... _RestCls,
