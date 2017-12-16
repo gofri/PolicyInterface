@@ -96,13 +96,13 @@ template <typename... ARGS>
 struct Args
 {
        constexpr Args() = default;
-};
 
-template <typename... myArgs, typename... otherArgs>
-static constexpr Args<myArgs..., otherArgs...> Combine(const Args<myArgs...>&, const Args<otherArgs...>&)
-{
-	   return Args<myArgs..., otherArgs...>();
-}
+       template <typename... otherArgs>
+       constexpr Args<ARGS..., otherArgs...> operator+(const Args<otherArgs...>)
+       {
+    	   return Args<ARGS..., otherArgs...>();
+       }
+};
 
 template <template <class> class... _Policies>
 struct PolicyList
@@ -294,7 +294,8 @@ struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOn
 template<class _First, class... Rest>
 struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 {
-	using List = decltype(Combine(Args<_First>(), typename DeriveOnce<Rest...>::List()));
+	using PrevList = typename DeriveOnce<Rest...>::List;
+	using List = decltype(Args<_First>() + PrevList());
 };
 
 // Beautify DeriveOnce2 and remove old DeriveOnce
