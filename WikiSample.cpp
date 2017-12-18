@@ -62,6 +62,11 @@ protected:
     {
         std::cout << message << std::endl;
     }
+
+    std::string message() const
+    {
+    	return "fuck the system";
+    }
 };
 
 class LanguagePolicyEnglish
@@ -179,15 +184,16 @@ void functionThatExpects(const HelloWorld<A...>& h)
 }
 // *** END OF EDIT. ***
 
+// Bad idea to use parameter pack - cannot choose which function in case of collision between different policies
 template <class... plcCls>
 using HelloWorldPolicy = DeriveMaster<	PolicyClassList<plcCls...>,
 										PolicyList<POutputPolicy, PLanguagePolicy> >;
 
-template <class... plcCls>
-struct HelloWorldBeautiful : HelloWorldPolicy<plcCls...>
+template <class OutputPolicy, class LanguagePolicy>
+struct HelloWorldBeautiful : HelloWorldPolicy<OutputPolicy, LanguagePolicy>
 {
-	using HelloWorldPolicy<plcCls...>::print;
-	using HelloWorldPolicy<plcCls...>::message;
+	using OutputPolicy::print;
+	using LanguagePolicy::message;
 
 	void run() const
 	{

@@ -141,8 +141,6 @@ struct Args
 		   return HoldWrap<_Arg, _ARGS...>::List();
 	   }
 
-       // TOOD add AddSorted that tries to add a Arg<single> to Arg<multiple> only if not inside
-
 	   static constexpr size_t Length = sizeof...(ARGS);
 
        struct DerivedType : ARGS... {};
@@ -340,7 +338,7 @@ struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOn
 //		Unify:
 //		using List = Args<filtered> => DeriveOnce<...>::List
 //		using DerivedType = Args<filtered>::DerivedType => DeriveOnce<...>::List
-
+// TODO use AddUnique etc. to improve efficiency
 template<class _First, class... Rest>
 struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 {
@@ -348,8 +346,6 @@ struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
 	using PrevList = typename ItrPrev::List;
 
 	using Current = _First;
-
-	// TODO doesnt work properly now. change Args<Current> with decltype(function): Args<...> GetIfNotBase<_First, Rest...>
 	using List = decltype(Args<>::AddUnique(PrevList(), Args<Current>()));
 };
 
