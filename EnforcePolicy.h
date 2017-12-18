@@ -113,7 +113,9 @@ struct Args
 	   template <typename _Last, typename _Arg>
 	   static constexpr bool IsIn(const Args<_Last>, const Args<_Arg>)
 	   {
-		   return std::is_same<_Last, _Arg>::value;
+		   return  std::is_same<_Last, _Arg>::value ||
+				   std::is_base_of<_Last, _Arg>::value ||
+				   std::is_base_of<_Arg, _Last>::value;
 	   }
 
 	   template <bool flag, typename Checked, typename... _ARGS>

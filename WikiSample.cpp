@@ -243,6 +243,17 @@ int main()
 
     DeriveOnce<OutputPolicyWriteToCout, LanguagePolicyEnglish, LanguagePolicyEnglish, OutputPolicyWriteToCout, LanguagePolicyGerman, LanguagePolicyEnglish>();
 
+    /**
+     * TODO add explanation:
+     * 		in the following scenario, there is no solution - virtual inheritance breaks the purpose of policies:
+     *			Derived1 : Base
+     *			Derived2 : Base
+     *		This would make Base ambiguous, which would cause a compile error.
+     *		This is equivalent to either:
+     *			func(Base* purpose1, Base* purpose2)
+     *			func(Derived1* purpose1, Derived2* purpose2)
+     *		which would work perfectly with strategy, but badly with policies.
+     */
     HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
     hwb.run();
 
