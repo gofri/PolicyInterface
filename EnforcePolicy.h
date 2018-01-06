@@ -83,6 +83,12 @@ struct RefProtected final : STATIC_DERIVE<ACC_PRO, _Object>
 	friend _Accessor;
 };
 
+template <class _Object, template <class> class _Access>
+struct AccessToProtected
+{
+	typedef RefProtected< _Object, _Access<_Object> > Access;
+};
+
 /**
  * TODO POC enfore that function is constexpr with Macro
  * TODO add support for FORCE-INHERITANCE for policies
@@ -137,15 +143,15 @@ struct Args
 	   };
 
 	   template <typename _Arg, typename... _ARGS>
-	   static constexpr typename HoldWrap<_Arg, _ARGS...>::List
-	   AddUnique(const Args<_ARGS...>, const Args<_Arg>)
+	   constexpr typename HoldWrap<_Arg, _ARGS...>::List
+	   static AddUnique(const Args<_ARGS...>, const Args<_Arg>)
 	   {
 		   return HoldWrap<_Arg, _ARGS...>::List();
 	   }
 
 	   static constexpr size_t Length = sizeof...(ARGS);
 
-       struct DerivedType : ARGS... {};
+       struct DerivedType : public ARGS... {};
 };
 
 template <template <class> class... _Policies>
@@ -175,6 +181,10 @@ struct PolicyUnit
 
 struct __CONST {};
 struct __ITR_END {};
+
+// TODO policy for ctor/dtor:
+//		is ARII<is_throw, is_throw> -> is_nothrow_constricutble && is_nothrow_destructuble
+//		nothrow for both by default or input both params
 
 // TODO consider changing API. Note - can use RetVal<>, Args<> as template params
 // TODO	consider adding Templated<...> that expects Access for type deduction.
@@ -324,16 +334,34 @@ template <class _Last>
 struct VirtualDerive<_Last> : virtual _Last{};
 
 template <bool isBase, class cls>
-struct BaseChecker {};
+struct BaseChecker {
+	void Get() const;
+};
 
 template <class cls>
-struct BaseChecker<false, cls> : public cls {};
+struct BaseChecker<false, cls> // : public cls // Remove to enable Get() to fix the issue
+{
+
+protected:
+
+	template <class _currentCls>
+	const _currentCls& Get(const Args<_currentCls>) const {}
+	//template <class _currentCls> _currentCls& Get(const Args<_currentCls>);
+
+	cls c1;
+
+	//cls& Get(const Args<cls>) { return c1; }
+	const cls& Get(const Args<cls>) const { return c1; }
+};
 
 template <class _First, class... Rest> struct DeriveOnce;
 
 template <class _ToCheck, class... Rest>
-struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOnce<Rest...> >::value, _ToCheck >
+struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOnce<Rest...> >::value,
+											_ToCheck >
 {
+	using Base = BaseChecker< std::is_base_of< _ToCheck, DeriveOnce<Rest...> >::value, _ToCheck >;
+	using Base::Get;
 };
 
 // TODO Add Wrapper class to DeriveOnce (Unify)
@@ -341,14 +369,16 @@ struct DeriveIfNotBase : public BaseChecker< std::is_base_of< _ToCheck, DeriveOn
 //		using List = Args<filtered> => DeriveOnce<...>::List
 //		using DerivedType = Args<filtered>::DerivedType => DeriveOnce<...>::List
 // TODO use AddUnique etc. to improve efficiency
-template<class _First, class... Rest>
-struct DeriveOnce :	DeriveOnce<Rest...>, DeriveIfNotBase<_First, Rest...>
+template<class _Current, class... _Rest>
+struct DeriveOnce :	DeriveOnce<_Rest...>, DeriveIfNotBase<_Current, _Rest...>
 {
-	using ItrPrev = DeriveOnce<Rest...>;
+	using ItrPrev = DeriveOnce<_Rest...>;
 	using PrevList = typename ItrPrev::List;
 
-	using Current = _First;
-	using List = decltype(Args<>::AddUnique(PrevList(), Args<Current>()));
+	using DeriveIfNotBase<_Current, _Rest...>::Get;
+	using DeriveOnce<_Rest...>::Get;
+
+	using List = decltype(Args<>::AddUnique(PrevList(), Args<_Current>()));
 };
 
 // Beautify DeriveOnce2 and remove old DeriveOnce
@@ -360,14 +390,20 @@ struct DeriveOnce<_Last> : _Last
 
 	using Current = _Last;
 	using List = Args<Current>;
+
+	void Get() const;
 };
 
 // TODO check whether EnforcePolicy would work too in case using virtual inheritance
 template <class _plcClsList, class _plcList> struct DeriveMaster;
 
 template <class... _plcClsList, template <class> class... _plcList>
-struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> : DeriveOnce<_plcClsList...>::List::DerivedType
+struct DeriveMaster<PolicyClassList<_plcClsList...>, PolicyList<_plcList...>> :
+												//DeriveOnce<_plcClsList...>::List::DerivedType,
+												DeriveOnce<_plcClsList...>
 {
+	using DeriveOnce<_plcClsList...>::Get;
+
 	constexpr DeriveMaster()
 	{
 		static_assert(Match(PolicyClassList<_plcClsList...>(), PolicyList<_plcList...>()), "Full match");

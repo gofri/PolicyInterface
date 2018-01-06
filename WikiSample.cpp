@@ -35,7 +35,7 @@ public:
 template <class _PolicyClass>
 struct POutputPolicy
 {
-	// TODO explain: no support for the nothrow guarantee by standard definition
+	// TODO explain: check type traits for the nothrow guarantee
 	// TODO explain: White/Black-listing limitations due to language support - known issue
 	// TODO explain: Template functions limitations due to language support
 
@@ -55,7 +55,7 @@ struct POutputPolicy
 
 class OutputPolicyWriteToCout
 {
-protected:
+public:
 
     template<typename MessageType>
     void print(MessageType const &message) const
@@ -71,7 +71,7 @@ protected:
 
 class LanguagePolicyEnglish
 {
-protected:
+public:
     std::string message() const
     {
         return "Hello, World!";
@@ -83,7 +83,7 @@ protected:
 
 class LanguagePolicyGerman
 {
-protected:
+public:
     std::string message() const
     {
         return "Hallo Welt!";
@@ -192,12 +192,18 @@ using HelloWorldPolicy = DeriveMaster<	PolicyClassList<plcCls...>,
 template <class OutputPolicy, class LanguagePolicy>
 struct HelloWorldBeautiful : HelloWorldPolicy<OutputPolicy, LanguagePolicy>
 {
-	using OutputPolicy::print;
-	using LanguagePolicy::message;
+	//using OutputPolicy::print;
+	//using LanguagePolicy::message;
+
+	using HelloWorldPolicy<OutputPolicy, LanguagePolicy>::Get;
 
 	void run() const
 	{
-		print(message());
+		const OutputPolicy& p = Get(Args<OutputPolicy>());
+		const LanguagePolicy& p2 = Get(Args<LanguagePolicy>());
+		std::cout << "Works?!" << std::endl;
+		p.print(p2.message());
+		std::cout << "Damm!!!!" << std::endl;
 	}
 };
 
@@ -205,6 +211,11 @@ void func(Args<OutputPolicyWriteToCout, LanguagePolicyEnglish>)
 {
 	std::cout << "yay!" << std::endl;
 }
+
+struct S
+{
+
+};
 
 /**
  * EDITED: 	Each paragraph in the following code section contains:
@@ -253,6 +264,9 @@ int main()
      *			func(Base* purpose1, Base* purpose2)
      *			func(Derived1* purpose1, Derived2* purpose2)
      *		which would work perfectly with strategy, but badly with policies.
+     * TODO POC: implementation suggestion to solve:
+     *
+     *
      */
     HelloWorldBeautiful<OutputPolicyWriteToCout, LanguagePolicyEnglish> hwb;
     hwb.run();
