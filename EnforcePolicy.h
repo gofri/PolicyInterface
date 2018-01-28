@@ -14,38 +14,7 @@ _Param GetParamFromTemplate(_Object<_Param> p)
 	return p;
 }
 
-struct ACC_PUB;
-struct ACC_PRO;
-struct ACC_PRI;
 
-/**
- *********************** STATIC DERIVE FUNCTIONS
- */
-// TODO move to library, generally useful and required for safe unprotect
-template <class _Object>
-struct SD_UTIL : public _Object
-{
-	// Derive without the ability to create an instance - simply get access to protected functions
-	SD_UTIL() = delete;
-};
-
-template <class _Access, class _Object>
-struct STATIC_DERIVE;
-
-template <class _Object>
-struct STATIC_DERIVE<ACC_PUB, _Object> : public SD_UTIL<_Object>
-{
-};
-
-template <class _Object>
-struct STATIC_DERIVE<ACC_PRO, _Object> : protected SD_UTIL<_Object>
-{
-};
-
-template <class _Object>
-struct STATIC_DERIVE<ACC_PRI, _Object> : private SD_UTIL<_Object>
-{
-};
 
 /**
  ********************* POLICY FUNCTIONS
@@ -74,20 +43,6 @@ class DuplexPolicyEnforcer : public PolicyEnforcer<Policy, PolicyClass>
 	static_assert(std::is_base_of<Policy<PolicyClass>, PolicyClass>::value, "Policy-class must derive from Policy.");
 };
 
-/**
- * RefProtected Grants _Accessor the access to reference protected data members and functions of _Object
- */
-template <class _Object, class _Accessor>
-struct RefProtected final : STATIC_DERIVE<ACC_PRO, _Object>
-{
-	friend _Accessor;
-};
-
-template <class _Object, template <class> class _Access>
-struct AccessToProtected
-{
-	typedef RefProtected< _Object, _Access<_Object> > Access;
-};
 
 /**
  * TODO POC enfore that function is constexpr with Macro

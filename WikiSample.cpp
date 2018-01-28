@@ -10,6 +10,7 @@
 
 // *** EDITED: not from original source code. ***
 #include "EnforcePolicy.h"
+#include "Inheritance.h"
 // *** END OF EDIT. ***
 
 struct Fake { int x; };
@@ -35,13 +36,9 @@ public:
 template <class _PolicyClass>
 struct POutputPolicy
 {
-	// TODO explain: check type traits for the nothrow guarantee
-	// TODO explain: White/Black-listing limitations due to language support - known issue
-	// TODO explain: Template functions limitations due to language support
-
 	typedef void (_PolicyClass::*print_p1)(std::string const &) const;
 
-	using Access = RefProtected<_PolicyClass, POutputPolicy>;
+	using Access = ReferProtected<_PolicyClass, POutputPolicy>;
 
 	constexpr POutputPolicy()
 	{
@@ -101,7 +98,7 @@ public:
 		// Function description...
 	    typedef std::string (_PolicyClass::*message_p)() const;
 
-	    using Access = RefProtected<_PolicyClass, PLanguagePolicy>;
+	    using Access = ReferProtected<_PolicyClass, PLanguagePolicy>;
 
 	    // different implementation options, chose yours...
 	    // TODO change Enforce to return ALWAYS_TRUE (change entire API to ALWAYS_TRUE, and rename ALWAYS_TRUE better)
@@ -121,7 +118,7 @@ public:
 		// Function description...
 	    typedef std::string (_PolicyClass::*message_p)() const;
 
-	    using Access = RefProtected<_PolicyClass, PLanguagePolicy2>;
+	    using Access = ReferProtected<_PolicyClass, PLanguagePolicy2>;
 
 	    constexpr PLanguagePolicy2()
 	    {
