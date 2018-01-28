@@ -109,6 +109,37 @@ struct Args
        struct DerivedType : public ARGS... {};
 };
 
+/*
+ * API solution:
+ *
+ * DeriveMaster<	Host,
+ * 					PolicyPair<Pol1, PolCls1>, // obviously, expects T... and parses later
+ * 					pairs...
+ * 				> : UniqueDerive< Host, PolicyPair<Pol1, PolCls1> >,
+ * 					DeriveMaterSub< Host, pairs... >
+ * {
+ * 		private:
+ *
+ * 		UniqueDerive< Host, PolicyPair<Pol1, PolCls1> >
+ * 		PolicyToType(Args<Pol1>)
+ * 		{
+ * 			return UniqueDerive< Host, PolicyPair<Pol1, PolCls1> >;
+ * 		}
+ *
+ * 		public:
+ *
+ * 		template <typename _Policy>
+ * 		using PolAccess = decltype(PolicyToType(Args<_Policy>));
+ *
+ * }
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 template <template <class> class... _Policies>
 struct PolicyList
 {
